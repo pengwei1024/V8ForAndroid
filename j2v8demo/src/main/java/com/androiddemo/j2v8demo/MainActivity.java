@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.eclipsesource.v8.ReferenceHandler;
 import com.eclipsesource.v8.V8;
+import com.eclipsesource.v8.V8Object;
 import com.eclipsesource.v8.V8Value;
 
 public class MainActivity extends AppCompatActivity {
@@ -16,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // 执行JS
         V8 runtime = V8.createV8Runtime();
         int result = runtime.executeIntegerScript(""
                 + "var hello = 'hello, ';\n"
@@ -23,5 +25,20 @@ public class MainActivity extends AppCompatActivity {
                 + "hello.concat(world).length;\n");
         runtime.release();
         Log.d(TAG, "length=" + result);
+
+        // 获取对象
+        runtime = V8.createV8Runtime();
+        runtime.executeVoidScript(""
+                + "var person = {};\n"
+                + "var hockeyTeam = {name : 'WolfPack'};\n"
+                + "person.first = 'Ian';\n"
+                + "person['last'] = 'Bull';\n"
+                + "person.hockeyTeam = hockeyTeam;\n");
+        V8Object person = runtime.getObject("person");
+        V8Object hockeyTeam = person.getObject("hockeyTeam");
+        Log.d(TAG, "person.hockeyTeam.name=" + hockeyTeam.getString("name"));
+        person.release();
+        hockeyTeam.release();
+        runtime.release();
     }
 }
