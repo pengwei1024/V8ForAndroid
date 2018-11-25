@@ -4,8 +4,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.eclipsesource.v8.JavaVoidCallback;
 import com.eclipsesource.v8.ReferenceHandler;
+import com.eclipsesource.v8.Releasable;
 import com.eclipsesource.v8.V8;
+import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
 import com.eclipsesource.v8.V8Value;
 
@@ -40,5 +43,44 @@ public class MainActivity extends AppCompatActivity {
         person.release();
         hockeyTeam.release();
         runtime.release();
+
+        // 注册方法
+        runtime = V8.createV8Runtime();
+        JavaVoidCallback callback = new JavaVoidCallback() {
+            @Override
+            public void invoke(V8Object receiver, V8Array parameters) {
+                if (parameters.length() > 0) {
+                    Object arg1 = parameters.get(0);
+                    Log.d(TAG, "arg1=" + arg1);
+                    if (arg1 instanceof Releasable) {
+                        ((Releasable) arg1).release();
+                    }
+                }
+            }
+        };
+        runtime.registerJavaMethod(callback, "print");
+        runtime.executeScript("print('hello, world');");
+        runtime.release();
+
+        // 注册对象
+        runtime = V8.createV8Runtime();
+        Console console = new Console();
+        V8Object v8Console = new V8Object(runtime);
+        runtime.add("console", v8Console);
+        v8Console.registerJavaMethod(console, "log", "log", new Class<?>[]{String.class});
+        v8Console.registerJavaMethod(console, "err", "err", new Class<?>[]{String.class});
+        v8Console.release();
+        runtime.executeScript("console.log('hello, world');");
+        runtime.release();
+    }
+
+    class Console {
+        public void log(final String message) {
+            Log.d(TAG, "Console:" + message);
+        }
+
+        public void err(final String message) {
+            Log.e(TAG, "Console:" + message);
+        }
     }
 }
