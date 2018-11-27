@@ -11,6 +11,7 @@ import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
 import com.eclipsesource.v8.V8Value;
+import com.eclipsesource.v8.utils.V8Executor;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -72,6 +73,18 @@ public class MainActivity extends AppCompatActivity {
         v8Console.release();
         runtime.executeScript("console.log('hello, world');");
         runtime.release();
+
+        // 独立线程执行
+        V8Executor executor = new V8Executor("var a='a';var b='b';a+b");
+        executor.start();
+        try {
+            executor.join();
+            String executorResult = executor.getResult();
+            Log.d(TAG, "executorResult=" + executorResult);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 
     class Console {
